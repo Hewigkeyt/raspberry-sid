@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
+import datetime
 from random import seed, random
+import re
+import sys
 from time import sleep, time
 
 from gpiozero import DigitalOutputDevice
@@ -41,14 +44,15 @@ setup()
 
 def ping_chip_select():
     cs.on()
-    sleep(.000002)
+    # no need for a delay here
+    sleep(.00001)
     cs.off()
 
 
 def sid_write(addr: int, data: int, ping_cs=True):
     addr = addr % (1<<5)
     data = data % (1<<8)
-    #print(f'WRITE data 0X{data:02X} 0b{data:08b} at addr 0X{addr:02X} 0b{addr:05b}')
+#    print(f'WRITE data 0X{data:02X} 0b{data:08b} at addr 0X{addr:02X} 0b{addr:05b}')
     bus.write_byte_data(DEVICE, register_map['GPIOB'], addr)
     bus.write_byte_data(DEVICE, register_map['GPIOA'], data)
     if ping_cs:
@@ -61,7 +65,9 @@ def poke(addr, data):
 
 
 def shutdown():
-    sid_write(0, 0, False)
+    for addr in range(26):
+        sid_write(addr, 0)
+    ping_chip_select()
     cs.off()
 
 
@@ -95,7 +101,7 @@ def sid_bench():
     # 54272 is a multiple of 256 so we can use the register addresses directly
     bench_start = time()
 
-    L=.15
+    L=.2
 
     v = [54272, 54279, 54286] # 120
 
@@ -152,19 +158,45 @@ def sid_bench():
 counter = 0
 time_start = time()
 try:
-    print('sid_bench')
-    sid_bench()
-    print('done')
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as f:
+            pt = datetime.datetime.now()
+            for line in f:
+                m = re.match("([0-9]+):([0-9]+)\.([0-9]+) ([0-9A-F]+) ([0-9A-F]+)", line)
+                if m is None:
+                    print(f"no match {line}")
+                    continue
+                tm, ts, tms, addr, data = m.groups()
+                t = datetime.timedelta(minutes=int(tm), seconds=int(ts), milliseconds=int(tms)*10)
+                if t != pt:
+                    #ping_chip_select()
+                    pt = t
+                    next_chord = datetime.datetime.fromtimestamp(time_start) + t
+                    lag = datetime.datetime.now() - next_chord
+                    if lag > datetime.timedelta(milliseconds=1):
+                        print(f'oops, lagging behind {lag}')
+                    while datetime.datetime.now() < next_chord:
+                        #print(f'zzz {datetime.datetime.now()} < {datetime.datetime.fromtimestamp(time_start)} + {t}')
+                        sleep(.0001)
+                print(f"{t} sid_write({addr}, {data}), {line.strip()}")
+                sid_write(int(addr, 16), int(data, 16))
 
-    sleep(3)
-
-    print('10 poke 54272+int(rnd(1)*25),int(rnd(1)*256) : goto 10')
-    seed(1)
-    while True:
-        counter += 1
-        print(f"counter = {counter} {time() - time_start:.3f}")
-        rnd_poke()
-        sleep(0.05)
+    else:
+        print('sid_bench')
+        sid_bench()
+        print('done')
+        sleep(3)
+        print('10 poke 54272+int(rnd(1)*25),int(rnd(1)*256) : goto 10')
+        seed(1)
+        while True:
+            counter += 1
+            print(f"counter = {counter} {time() - time_start:.3f}")
+            rnd_poke()
+            sleep(0.05)
 except KeyboardInterrupt:
+    pass
+finally:
     print("Shutting down SID")
     shutdown()
+    sleep(.1)
+    print('bye')
