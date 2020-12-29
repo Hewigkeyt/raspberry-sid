@@ -161,13 +161,14 @@ try:
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as f:
             pt = datetime.datetime.now()
+            start = pt
             for line in f:
                 m = re.match("([0-9]+):([0-9]+)\.([0-9]+) ([0-9A-F]+) ([0-9A-F]+)", line)
                 if m is None:
                     print(f"no match {line}")
                     continue
                 tm, ts, tms, addr, data = m.groups()
-                t = datetime.timedelta(minutes=int(tm), seconds=int(ts), milliseconds=int(tms)*10)
+                t = datetime.timedelta(minutes=int(tm), seconds=int(ts), milliseconds=int(tms)*20)
                 if t != pt:
                     #ping_chip_select()
                     pt = t
@@ -178,7 +179,7 @@ try:
                     while datetime.datetime.now() < next_chord:
                         #print(f'zzz {datetime.datetime.now()} < {datetime.datetime.fromtimestamp(time_start)} + {t}')
                         sleep(.0001)
-                print(f"{t} sid_write({addr}, {data}), {line.strip()}")
+                print(f"{t} {datetime.datetime.now() - start} sid_write({addr}, {data}), {line.strip()}")
                 sid_write(int(addr, 16), int(data, 16))
 
     else:
