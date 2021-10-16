@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 
-import sid-modules
+import sid_modules
 
 #Call setup function from sid-modules to init the sid
-setup()
+sid_modules.setup()
 
 try:
     #max volume
-    poke(24,15)
+    sid_modules.poke(24,15)
 
     #set voice 1 to triangle
-    poke(4,16)
+    sid_modules.poke(4,16)
 
-    poke(00,0x1C)
-    poke(01,0xD6)
+    sid_modules.poke(0,0x1C)
+    sid_modules.poke(1,0xD6)
 except KeyboardInterrupt:
     pass
 finally:
     print("Shutting down SID")
-    shutdown()
+    sid_modules.shutdown()
     sleep(.1)
     print('bye')

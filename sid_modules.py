@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-from random import seed, random
-import re
-from time import sleep, time
+from random import random
+from time import sleep
 
 from gpiozero import DigitalOutputDevice
 import smbus
@@ -52,7 +51,7 @@ def sid_write(addr: int, data: int, ping_cs=True):
     bus.write_byte_data(DEVICE, register_map['GPIOB'], addr)
     bus.write_byte_data(DEVICE, register_map['GPIOA'], data)
     if ping_cs:
-      ping_chip_select()
+        ping_chip_select()
 
 
 def poke(addr, data):
@@ -70,5 +69,3 @@ def shutdown():
 def rnd_poke():
     """10 POKE 54272 + RND(1) *25, RND(1) * 256 : GOTO 10"""
     sid_write(int(random() * 25), int(random() * 256))
-
-
