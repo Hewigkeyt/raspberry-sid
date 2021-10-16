@@ -1,6 +1,8 @@
 # raspberry-sid
 MOS 6581 SID HAT, chiptune player and synth for Raspberry Pi
 
+[![.github/workflows/main.yml](https://github.com/LIII-XXII/raspberry-sid/actions/workflows/main.yml/badge.svg)](https://github.com/LIII-XXII/raspberry-sid/actions/workflows/main.yml)
+
 ## Known issues
 
 Some parts of "Cybernoid II" by Jeroen Tel sound strange

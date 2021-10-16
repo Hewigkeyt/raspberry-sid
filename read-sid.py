@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from time import sleep
 
 import sid_modules
 
