@@ -12,7 +12,7 @@ import smbus
 # TODO: remove crystal by generating 1MHz clock on GPIO4 (GPCLK0)
 
 DEVICE: int = 0x27
-cs = DigitalOutputDevice(4, active_high=False) #GPIO4
+cs = DigitalOutputDevice(5, active_high=False) #GPIO4
 
 address_map = {
     0x00: 'IODIRA', 0x01: 'IODIRB', 0x02: 'IPOLA', 0x03: 'IPOLB',
@@ -45,7 +45,6 @@ setup()
 def ping_chip_select():
     cs.on()
     # no need for a delay here
-    sleep(.00001)
     cs.off()
 
 
@@ -57,6 +56,8 @@ def sid_write(addr: int, data: int, ping_cs=True):
     bus.write_byte_data(DEVICE, register_map['GPIOA'], data)
     if ping_cs:
       ping_chip_select()
+    bus.write_byte_data(DEVICE, register_map['GPIOB'], 0)
+    bus.write_byte_data(DEVICE, register_map['GPIOA'], 0)
 
 
 def poke(addr, data):
@@ -159,6 +160,9 @@ counter = 0
 time_start = time()
 try:
     if len(sys.argv) > 1:
+        speed = 1.
+        if len(sys.argv) == 3:
+            speed = float(sys.argv[2])
         with open(sys.argv[1]) as f:
             pt = datetime.datetime.now()
             start = pt
@@ -168,7 +172,7 @@ try:
                     print(f"no match {line}")
                     continue
                 tm, ts, tms, addr, data = m.groups()
-                t = datetime.timedelta(minutes=int(tm), seconds=int(ts), milliseconds=int(tms)*20)
+                t = datetime.timedelta(minutes=int(tm), seconds=int(ts), milliseconds=int(tms)*20) * speed
                 if t != pt:
                     #ping_chip_select()
                     pt = t

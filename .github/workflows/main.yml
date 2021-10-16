@@ -1,0 +1,18 @@
+name: pylint
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+    - name: install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pylint
+    - name: check syntax with pylint
+      run: pylint --errors-only *.py
